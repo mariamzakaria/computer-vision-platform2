@@ -623,8 +623,9 @@ def cornerDetection():
         images_R =  images_detM - K * images_trM 
 
 
-        #ratio = 0.2 # Tunable value. to keep adaptivity per image.
-        images_corners =   np.abs(images_R ) >  np.quantile( np.abs(images_R ),0.999)   
+        images_corners =   np.abs(images_R ) >  np.quantile( np.abs(images_R ),0.999)
+       ## images_edges =   np.abs(images_R ) <  np.quantile( np.abs(images_R ),0.999)   
+
 
 
         fig2 = plt.figure(figsize=(10,20))
@@ -632,6 +633,8 @@ def cornerDetection():
         plt.imshow(image,zorder=1)
     
         corners_pos = np.argwhere(images_corners)
+        ## edges_pos = np.argwhere(images_corners)
+
         plt.scatter(corners_pos[:,1],corners_pos[:,0],zorder=2, c = 'r',marker ='x')
         plt.show()
         #plt.close('all')
