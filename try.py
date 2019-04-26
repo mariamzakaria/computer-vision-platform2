@@ -2,8 +2,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets,uic
 import os
 import sys
-sys.path.insert(0, "C:\\Users\\medoz\\Anaconda3\\Lib\\site-packages")
-sys.path.insert(0, "C:\\Users\\medoz\\Anaconda3\\lib\\site-packages")
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as col
@@ -22,6 +21,8 @@ from  matplotlib.figure  import  Figure
 from scipy import signal
 from scipy import ndimage
 import pyqtgraph as pg
+from skimage import feature
+
 
 
 
@@ -93,52 +94,7 @@ def setImage():
         dig.image=rgb2gray(image)
         plotinput(dig.image)
 
-# DETECT LINES
-def HoughLines():
-  
-    dig.fileName, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select Image", "", "Image Files (*.png *.jpg *jpeg *.bmp);;All Files (*)") # Ask for file
-    if dig.fileName:
-        dig.image= Image.open(dig.fileName)
-        dig.pixmap = QtGui.QPixmap(dig.fileName) # Setup pixmap with the provided image
-        dig.pixmap = dig.pixmap.scaled(dig.label_lines_input.width(), dig.label_lines_input.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
-        dig.label_lines_input.setPixmap(dig.pixmap) 
-        
-        Shapeee = np.array(dig.image)
-        edges = canny(Shapeee, 2, 1, 25)
-        lines = probabilistic_hough_line(edges, threshold=10, line_length=5,line_gap=3)
 
-        fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharex=True, sharey=True)
-        ax = axes.ravel()
-
-        ax[0].imshow(dig.image, cmap=cm.gray)
-        ax[0].set_title('Input image')
-
-
-        ax[1].imshow(edges, cmap=cm.gray)
-        ax[1].set_title('Canny edges')
-        #edges.save("mmmmmm.bmp")
-
-        x = edges * 0
-        
-
-        ax[2].imshow(x)
-        output_image1 = Image.new("RGB", dig.image.size)
-        draw = ImageDraw.Draw(output_image1)
-        for line in lines:
-            p0, p1 = line
-            draw.point((p0,p1),(255,255,255))
-
-            ax[2].plot((p0[0], p1[0]), (p0[1], p1[1]))
-
-        ax[2].set_title('Probabilistic Hough')
-        #x.imsave("Hough.bmp",imgf)
-        
-       # scipy.misc.imsave('outfilerrr.bmp', edges * 0)
-        output_image1.save("cannyline.bmp")
-        dig.pixma = QtGui.QPixmap("cannyline.bmp") # Setup pixmap with the provided image
-        dig.pixma = dig.pixma.scaled(dig.label_lines_input_2.width(), dig.label_lines_input_2.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
-        dig.label_lines_input_2.setPixmap(dig.pixma)
-        dig.label_lines_input_2.setAlignment(QtCore.Qt.AlignCenter) 
 
       
 
@@ -448,24 +404,6 @@ def circle():
             circles.append((x, y, r))   
              
 #######################################################################
-#Hough Lines
-def houghLine(image):
-    Ny = image.shape[0]
-    Nx = image.shape[1]
-
-    #Max diatance is diagonal one 
-    Maxdist = int(np.round(np.sqrt(Nx**2 + Ny ** 2)))
-    thetas = np.deg2rad(np.arange(-90, 90))
- #Range of radius
-    rs = np.linspace(-Maxdist, Maxdist, 2*Maxdist)
-    accumulator = np.zeros((2 * Maxdist, len(thetas)))
-    for y in range(Ny):
-        for x in range(Nx):
-            if image[y,x] > 0:
-                for k in range(len(thetas)):
-                    r = x*np.cos(thetas[k]) + y * np.sin(thetas[k])
-                    accumulator[int(r) + Maxdist,k] += 1
-    return accumulator, thetas, rs
 
 
 #prewitt and sobel operators 
@@ -642,7 +580,215 @@ def matching():
         dig.label_histograms_output.setAlignment(QtCore.Qt.AlignCenter)   
         x,y=Histogram(matched)
         pg.plot(x,y,title='matched histogram') 
-            
+        
+        
+        
+ #########################################################
+#CORNER DETECTION
+def cornerDetection():
+    dig.fileName, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select Image", "", "Image Files (*.png *.jpg *jpeg *.bmp);;All Files (*)") # Ask for file
+    if dig.fileName:
+        image= mpimg.imread(dig.fileName)
+        images_gr =  rgb2gray( image) 
+        image_smooth =  signal.convolve2d(images_gr , gaussian_kernel(7,1.0) ,'same')
+        fig1 = plt.figure(figsize=(120,120))
+        plt.imshow( image_smooth,cmap='gray' )
+        plt.close('all')
+        fig1.savefig('smoothimage.png')
+        dig.pixma = QtGui.QPixmap("smoothimage.png") # Setup pixmap with the provided image
+        dig.pixma = dig.pixma.scaled(dig.label_corners_input.width(), dig.label_corners_input.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
+        dig.label_corners_input.setPixmap(dig.pixma) 
+        dig.label_corners_input.setAlignment(QtCore.Qt.AlignCenter) 
+        sobel_h = np.array([[ -1 , 0 , 1 ] ,
+                    [ -2 , 0 , 2 ] ,
+                    [ -1 , 0 , 1 ]])
+        sobel_v = sobel_h.transpose()
+
+        images_Ix =  signal.convolve2d( image_smooth , sobel_h ,'same')
+        images_Iy =  signal.convolve2d( image_smooth , sobel_v ,'same') 
+        
+        images_Ixx = np.multiply( images_Ix , images_Ix ) 
+        images_Iyy = np.multiply( images_Iy, images_Iy) 
+        images_Ixy = np.multiply( images_Ix , images_Iy) 
+
+        images_Ixx_hat = signal.convolve2d( images_Ixx ,  gaussian_kernel(21,1.0) ,'same') 
+        images_Iyy_hat = signal.convolve2d( images_Iyy ,  gaussian_kernel(21,1.0) , 'same') 
+        images_Ixy_hat =  signal.convolve2d( images_Ixy ,  gaussian_kernel(21,1.0)  ,'same') 
+
+        K = 0.05
+
+        images_detM =  np.multiply(images_Ixx_hat,images_Iyy_hat) - np.multiply(images_Ixy_hat,images_Ixy_hat) 
+              
+        images_trM =  images_Ixx_hat + images_Iyy_hat
+        images_R =  images_detM - K * images_trM 
+
+
+        #ratio = 0.2 # Tunable value. to keep adaptivity per image.
+        images_corners =   np.abs(images_R ) >  np.quantile( np.abs(images_R ),0.999)   
+
+
+        fig2 = plt.figure(figsize=(10,20))
+
+        plt.imshow(image,zorder=1)
+    
+        corners_pos = np.argwhere(images_corners)
+        plt.scatter(corners_pos[:,1],corners_pos[:,0],zorder=2, c = 'r',marker ='x')
+        plt.show()
+        #plt.close('all')
+        fig2.savefig('detectedcorners.png')
+        dig.pixma1 = QtGui.QPixmap("detectedcorners.png") # Setup pixmap with the provided image
+        dig.pixma1 = dig.pixma1.scaled(dig.label_corners_corners_output.width(), dig.label_corners_corners_output.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
+        dig.label_corners_corners_output.setPixmap(dig.pixma1) 
+        dig.label_corners_corners_output.setAlignment(QtCore.Qt.AlignCenter)  
+
+#################################33
+#DETECT LINES
+
+def HoughLines():
+  
+    dig.fileName, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select Image", "", "Image Files (*.png *.jpg *jpeg *.bmp);;All Files (*)") # Ask for file
+    if dig.fileName:
+        dig.shapes = mpimg.imread(dig.fileName)
+        dig.shapesss = Image.open(dig.fileName)
+        dig.images_gr =  rgb2gray( dig.shapes ) 
+        dig.pixmap = QtGui.QPixmap(dig.fileName ) # Setup pixmap with the provided image
+        dig.pixmap = dig.pixmap.scaled(dig.label_lines_input.width(), dig.label_lines_input.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
+        dig.label_lines_input.setPixmap(dig.pixmap) 
+        dig.label_lines_input.setAlignment(QtCore.Qt.AlignCenter) 
+        canny_edges = feature.canny(dig.images_gr)
+        #fig3 = plt.figure(figsize=(10,20))
+        #plt.imshow(canny_edges,cmap='gray' )
+        
+        H, rhos, thetas = hough_lines_acc(canny_edges)
+        indicies, H = hough_peaks(H, 3, nhood_size=11) # find peaks
+        plot_hough_acc(H) # plot hough space, brighter spots have higher votes
+        hough_lines_draw(dig.shapesss, indicies, rhos, thetas)
+
+# Show image with manual Hough Transform Lines
+        fig3 = plt.figure(figsize=(120,120))
+        plt.imshow(dig.shapesss)
+        fig3.savefig('detectedLines.png')
+        dig.pixma1 = QtGui.QPixmap("detectedLines.png") # Setup pixmap with the provided image
+        dig.pixma1 = dig.pixma1.scaled(dig.label_lines_input_2.width(), dig.label_lines_input_2.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
+        dig.label_lines_input_2.setPixmap(dig.pixma1) 
+        dig.label_lines_input_2.setAlignment(QtCore.Qt.AlignCenter) 
+
+def hough_lines_acc(img, rho_resolution=1, theta_resolution=1):
+    ''' A function for creating a Hough Accumulator for lines in an image. '''
+    height, width = img.shape # we need heigth and width to calculate the diag
+    img_diagonal = np.ceil(np.sqrt(height**2 + width**2)) # a**2 + b**2 = c**2
+    rhos = np.arange(-img_diagonal, img_diagonal + 1, rho_resolution)
+    thetas = np.deg2rad(np.arange(-90, 90, theta_resolution))
+
+    # create the empty Hough Accumulator with dimensions equal to the size of
+    # rhos and thetas
+    H = np.zeros((len(rhos), len(thetas)), dtype=np.uint64)
+    y_idxs, x_idxs = np.nonzero(img) # find all edge (nonzero) pixel indexes
+
+    for i in range(len(x_idxs)): # cycle through edge points
+        x = x_idxs[i]
+        y = y_idxs[i]
+
+        for j in range(len(thetas)): # cycle through thetas and calc rho
+            rho = int((x * np.cos(thetas[j]) +
+                       y * np.sin(thetas[j])) + img_diagonal)
+            H[rho, j] += 1
+
+    return H, rhos, thetas
+
+
+def hough_simple_peaks(H, num_peaks):
+    ''' A function that returns the number of indicies = num_peaks of the
+        accumulator array H that correspond to local maxima. '''
+    indices =  np.argpartition(H.flatten(), -2)[-num_peaks:]
+    return np.vstack(np.unravel_index(indices, H.shape)).T
+
+def hough_peaks(H, num_peaks, threshold=0, nhood_size=3):
+    ''' A function that returns the indicies of the accumulator array H that
+        correspond to a local maxima.  If threshold is active all values less
+        than this value will be ignored, if neighborhood_size is greater than
+        (1, 1) this number of indicies around the maximum will be surpessed. '''
+    # loop through number of peaks to identify
+    indicies = []
+    H1 = np.copy(H)
+    for i in range(num_peaks):
+        idx = np.argmax(H1) # find argmax in flattened array
+        H1_idx = np.unravel_index(idx, H1.shape) # remap to shape of H
+        indicies.append(H1_idx)
+
+        # surpess indicies in neighborhood
+        idx_y, idx_x = H1_idx # first separate x, y indexes from argmax(H)
+        # if idx_x is too close to the edges choose appropriate values
+        if (idx_x - (nhood_size/2)) < 0: min_x = 0
+        else: min_x = idx_x - (nhood_size/2)
+        if ((idx_x + (nhood_size/2) + 1) > H.shape[1]): max_x = H.shape[1]
+        else: max_x = idx_x + (nhood_size/2) + 1
+
+        # if idx_y is too close to the edges choose appropriate values
+        if (idx_y - (nhood_size/2)) < 0: min_y = 0
+        else: min_y = idx_y - (nhood_size/2)
+        if ((idx_y + (nhood_size/2) + 1) > H.shape[0]): max_y = H.shape[0]
+        else: max_y = idx_y + (nhood_size/2) + 1
+
+        # bound each index by the neighborhood size and set all values to 0
+        for x in range(int(min_x),int( max_x)):
+            for y in range(int(min_y),int( max_y)):
+                # remove neighborhoods in H1
+                H1[y, x] = 0
+
+                # highlight peaks in original H
+                if (x == min_x or x == (max_x - 1)):
+                    H[y, x] = 255
+                if (y == min_y or y == (max_y - 1)):
+                    H[y, x] = 255
+
+    # return the indicies and the original Hough space with selected points
+    return indicies, H
+
+
+def plot_hough_acc(H, plot_title='Hough Accumulator Plot'):
+    ''' A function that plot a Hough Space using Matplotlib. '''
+    fig = plt.figure(figsize=(10, 10))
+    fig.canvas.set_window_title(plot_title)
+    	
+    plt.imshow(H, cmap='jet')
+
+    plt.xlabel('Theta Direction'), plt.ylabel('Rho Direction')
+    plt.tight_layout()
+    plt.show()
+    plt.close()
+    fig.savefig(' Hough Space.png')
+    dig.pixma1 = QtGui.QPixmap(' Hough Space.png') # Setup pixmap with the provided image
+    dig.pixma1 = dig.pixma1.scaled(dig.label_lines_hough.width(), dig.label_lines_hough.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
+    dig.label_lines_hough.setPixmap(dig.pixma1) 
+    dig.label_lines_hough.setAlignment(QtCore.Qt.AlignCenter)
+
+def hough_lines_draw(img, indicies, rhos, thetas):
+    ''' A function that takes indicies a rhos table and thetas table and draws
+        lines on the input images that correspond to these values. '''
+    for i in range(len(indicies)):
+        # reverse engineer lines from rhos and thetas
+        rho = rhos[indicies[i][0]]
+        theta = thetas[indicies[i][1]]
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a*rho
+        y0 = b*rho
+        # these are then scaled so that the lines go off the edges of the image
+        x1 = int(x0 + 1000*(-b))
+        y1 = int(y0 + 1000*(a))
+        x2 = int(x0 - 1000*(-b))
+        y2 = int(y0 - 1000*(a))
+       # img = Image.new('RGB', (100, 100))
+       # img = Image.new('RGBA', (400, 400), (0, 255, 0)) 
+        draw = ImageDraw.Draw(img)
+        #draw.line((0, 0) + img.size, fill=128)
+        line_color = (0, 255, 255)
+        draw.line([x1,y1,x2,y2],fill=line_color,width=2)
+       # draw.line((x1, y1), (x2, y2),fill=128)
+
+       # cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)        
+           
 
     
 
@@ -657,8 +803,10 @@ dig.pushButton_circles_load.clicked.connect(houghCircles)
 dig.pushButton_histograms_load.clicked.connect(setimagehistogram)
 dig.pushButton_histograms_load_target.clicked.connect(setimagetarget)
 dig.radioButton_2.toggled.connect(matching)
-dig.Convert.clicked.connect(convetToGray)
+#dig.Convert.clicked.connect(convetToGray)
 dig.radioButton.toggled.connect(HistogramEqualization)
+dig.pushButton_corners_load.clicked.connect(cornerDetection)
+
 
 
 dig.show()
