@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as col
 import matplotlib.image as mpimg
+from scipy import fftpack
 from matplotlib import cm
 from math import sqrt, pi, cos, sin, atan2
 from PIL import Image, ImageDraw
