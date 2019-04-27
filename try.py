@@ -2,7 +2,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets,uic
 import os
 import sys
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as col
@@ -18,7 +17,8 @@ from skimage.feature import canny
 from  matplotlib.backends.backend_qt5agg  import  FigureCanvas
 from skimage.transform import (hough_line, hough_line_peaks,probabilistic_hough_line)
 from  matplotlib.figure  import  Figure
-
+from sklearn import preprocessing
+from sklearn.metrics.pairwise import euclidean_distances
 from scipy import signal
 from scipy import ndimage
 import pyqtgraph as pg
@@ -96,9 +96,22 @@ def setImage():
         plotinput(dig.image)
 
 
-
+def setImageSegment():
+    dig.fileName, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select Image", "", "Image Files (*.png *.jpg *jpeg *.bmp);;All Files (*)") # Ask for file
+    if dig.fileName: # If the user gives a file
+        
+        dig.pixmap = QtGui.QPixmap(dig.fileName) # Setup pixmap with the provided image
+        dig.pixmap = dig.pixmap.scaled(dig.label_12.width(), dig.label_12.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
+        dig.label_12.setPixmap(dig.pixmap) # Set the pixmap onto the label#dig.label_filters_input.setAlignment(QtCore.Qt.AlignCenter) # Align the label to center
+           
       
-
+def setFiltersSegmentation (text):
+    if dig.comboBox_3.currentIndex() == 1:
+        prewit(dig.fileName)
+        
+    if dig.comboBox_3.currentIndex() == 2:
+        Kmeans(dig.fileName)    
+    
 # Apply filters on images
 def setFilters(text):
 #prewit FILTER
@@ -159,7 +172,7 @@ def setFilters(text):
     
 #sharpen FILTER
     if dig.comboBox.currentIndex() == 9:
-        sharpen(dig.image)
+        sharpen (dig.image)
         
 #FT
 
@@ -171,7 +184,7 @@ def setFilters(text):
 
 #ShiftedFT        
     if dig.comboBox.currentIndex() == 11:
-        ShiftedFT = fftpack.fftshift(dig.FT)
+        ShiftedFT = fftpack.fftshift(dig.FT )
         v2=np.log(1+np.abs(ShiftedFT))
         plotoutput(v2)
 
@@ -378,6 +391,7 @@ def filter_strong_edges(gradient, width, height, low, high):
         lastiter = newkeep
 
     return list(keep)
+
 def circle():
     # Find circles
     rmin = 20
@@ -419,6 +433,7 @@ sobel_h = np.array([[ -1 , 0 , 1 ] ,
                     [ -2 , 0 , 2 ] ,
                     [ -1 , 0 , 1 ]])
 sobel_v = sobel_h.transpose()
+
 def sobel(img):
     image_sobel_h = signal.convolve2d( img, sobel_h ,'same')
     image_sobel_v = signal.convolve2d( img , sobel_v ,'same')
@@ -519,7 +534,7 @@ def setimagehistogram():
 
 
 def HistogramEqualization():
-    cs = cdf(dig.y)
+    cs = cdf (dig.y)
     # numerator & denomenator
     nj = (cs - cs.min()) * 255
     N = cs.max() - cs.min()
@@ -555,7 +570,8 @@ def hist_match(source, template):
     targetcdf = np.cumsum(tcounts).astype(np.float64)
     targetcdf /= targetcdf[-1]
     matched = np.interp(sourcecdf, targetcdf, tvalues)
-    return matched[index].reshape(oldshape)        
+    return matched[index].reshape(oldshape)   
+     
 def setimagetarget():
     fileName, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select Image", "", "Image Files (*.png *.jpg *.jpeg *.bmp);;All Files (*)") # Ask for file
     if fileName: # If the user gives a file
@@ -571,6 +587,7 @@ def setimagetarget():
         dig.label_histograms_input.setAlignment(QtCore.Qt.AlignCenter)   
         x,y=Histogram(dig.targetimage)
         pg.plot(x,y,title='target histogram') 
+        
 def matching():
         matched=hist_match(dig.hisimage,dig.targetimage)
         yourQImage=qimage2ndarray.array2qimage(matched)
@@ -793,8 +810,94 @@ def hough_lines_draw(img, indicies, rhos, thetas):
 
        # cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)        
            
-
+def Kmeans (img) :
+    iterations = 5    
+    K=4
+    inputName= img
+    dig.outputName = 'KmeansImage.jpg'
+    #	Open input image
+    image = Image.open(inputName)
+    imageW = image.size[0]
+    imageH = image.size[1]
     
+    #	Initialise data vector with attribute r,g,b,x,y for each pixel
+    dataVector = np.ndarray(shape=(imageW * imageH, 5), dtype=float)
+    #	Initialise vector that holds which cluster a pixel is currently in
+    pixelClusterAppartenance = np.ndarray(shape=(imageW * imageH), dtype=int)
+    
+    #	Populate data vector with data from input image
+    #	dataVector has 5 fields: red, green, blue, x coord, y coord
+    for y in range(0, imageH):
+      for x in range(0, imageW):
+      	xy = (x, y)
+      	rgb = image.getpixel(xy)
+      	dataVector[x + y * imageW, 0] = rgb[0]
+      	dataVector[x + y * imageW, 1] = rgb[1]
+      	dataVector[x + y * imageW, 2] = rgb[2]
+      	dataVector[x + y * imageW, 3] = x
+      	dataVector[x + y * imageW, 4] = y
+    
+    #	Standarize the values of our features
+    dataVector_scaled = preprocessing.normalize(dataVector)
+    
+    #	Set centers
+    minValue = np.amin(dataVector_scaled)
+    maxValue = np.amax(dataVector_scaled)
+    
+    centers = np.ndarray(shape=(K,5))
+    for index, center in enumerate(centers):
+    	centers[index] = np.random.uniform(minValue, maxValue, 5)
+    
+    for iteration in range (iterations):
+    	#	Set pixels to their cluster
+    	for idx, data in enumerate(dataVector_scaled):
+    		distanceToCenters = np.ndarray(shape=(K))
+    		for index, center in enumerate(centers):
+    			distanceToCenters[index] = euclidean_distances(data.reshape(1, -1), center.reshape(1, -1))
+    		pixelClusterAppartenance[idx] = np.argmin(distanceToCenters)
+    
+    	##################################################################################################
+    	#	Check if a cluster is ever empty, if so append a random datapoint to it
+    	clusterToCheck = np.arange(K)		#contains an array with all clusters
+    										#e.g for K=10, array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    	clustersEmpty = np.in1d(clusterToCheck, pixelClusterAppartenance)
+    										#^ [True True False True * n of clusters] False means empty
+    	for index, item in enumerate(clustersEmpty):
+    		if item == False:
+    			pixelClusterAppartenance[np.random.randint(len(pixelClusterAppartenance))] = index
+    			# ^ sets a random pixel to that cluster as mentioned in the homework writeup
+    	##################################################################################################
+    
+    	#	Move centers to the centroid of their cluster
+    	for i in range (K):
+    		dataInCenter = []
+    
+    		for index, item in enumerate(pixelClusterAppartenance):
+    			if item == i:
+    				dataInCenter.append(dataVector_scaled[index])
+    		dataInCenter = np.array(dataInCenter)
+    		centers[i] = np.mean(dataInCenter, axis=0)
+    	print ("Centers Iteration num", iteration, ": \n", centers)
+    
+    #	set the pixels on original image to be that of the pixel's cluster's centroid
+    for index, item in enumerate(pixelClusterAppartenance ):
+    	dataVector[index][0] = int(round(centers[item][0] * 255))
+    	dataVector[index][1] = int(round(centers[item][1] * 255))
+    	dataVector[index][2] = int(round(centers[item][2] * 255))
+    
+    #	Save image
+    image = Image.new("RGB", (imageW, imageH))
+    
+    for y in range (imageH):
+    	for x in range (imageW):
+    	 	image.putpixel((x, y), (int(dataVector[y * imageW + x][0]), 
+    	 							int(dataVector[y * imageW + x][1]),
+    	 							int(dataVector[y * imageW + x][2])))
+    image.save("./images/KmeansResult.png")
+    dig.pixm = QtGui.QPixmap("./images/KmeansResult.png") # Setup pixmap with the provided image
+    dig.pixm = dig.pixm.scaled(dig.label_13.width(), dig.label_13.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
+    dig.label_13.setPixmap(dig.pixm) # Set the pixmap onto the label#dig.label_filters_input.setAlignment(QtCore.Qt.AlignCenter) # Align the label to center
+       
 
 app= QtWidgets.QApplication ([])
 dig = uic.loadUi("mainwindow.ui")
@@ -803,14 +906,15 @@ dig.pushButton_filters_load.clicked.connect(setImage)
 dig.Load_frequency_domain.clicked.connect(setImageFT)
 dig.comboBox.activated[str].connect(setFilters)
 dig.pushButton_lines_load.clicked.connect(HoughLines)
-dig.pushButton_circles_load.clicked.connect(houghCircles)
-dig.pushButton_histograms_load.clicked.connect(setimagehistogram)
+dig.pushButton_circles_load.clicked.connect(houghCircles )
+dig.pushButton_histograms_load.clicked.connect(setimagehistogram )
 dig.pushButton_histograms_load_target.clicked.connect(setimagetarget)
 dig.radioButton_2.toggled.connect(matching)
 #dig.Convert.clicked.connect(convetToGray)
-dig.radioButton.toggled.connect(HistogramEqualization)
+dig.radioButton.toggled.connect(HistogramEqualization )
 dig.pushButton_corners_load.clicked.connect(cornerDetection)
-
+dig.LoadImage.clicked.connect(setImageSegment )
+dig.comboBox_3.activated[str].connect(setFiltersSegmentation )
 
 
 dig.show()

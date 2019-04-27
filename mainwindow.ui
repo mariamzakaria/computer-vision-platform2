@@ -30,7 +30,7 @@
         <bool>true</bool>
        </property>
        <property name="currentIndex">
-        <number>4</number>
+        <number>5</number>
        </property>
        <widget class="QWidget" name="tab_filters">
         <attribute name="title">
@@ -800,33 +800,39 @@
         <widget class="QLabel" name="label_12">
          <property name="geometry">
           <rect>
-           <x>210</x>
-           <y>50</y>
-           <width>311</width>
-           <height>191</height>
+           <x>190</x>
+           <y>40</y>
+           <width>331</width>
+           <height>231</height>
           </rect>
          </property>
          <property name="frameShape">
           <enum>QFrame::Box</enum>
          </property>
          <property name="text">
-          <string>Input Image </string>
+          <string>Input image</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
          </property>
         </widget>
         <widget class="QLabel" name="label_13">
          <property name="geometry">
           <rect>
-           <x>550</x>
-           <y>52</y>
-           <width>301</width>
-           <height>191</height>
+           <x>530</x>
+           <y>40</y>
+           <width>331</width>
+           <height>231</height>
           </rect>
          </property>
          <property name="frameShape">
           <enum>QFrame::Box</enum>
          </property>
          <property name="text">
-          <string>Output Image </string>
+          <string>Output image</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
          </property>
         </widget>
        </widget>
