@@ -600,7 +600,6 @@ def matching():
         dig.label_histograms_output.setAlignment(QtCore.Qt.AlignCenter)   
         x,y=Histogram(matched)
         pg.plot(x,y,title='matched histogram') 
-<<<<<<< HEAD
 
 #SNAKE
 ##################################################################################
@@ -672,7 +671,6 @@ def startsnake():
  
 
 ###################################################################################        
-=======
         
         
         
@@ -683,6 +681,17 @@ def cornerDetection():
     if dig.fileName:
         image= mpimg.imread(dig.fileName)
         images_gr =  rgb2gray( image) 
+        canny_edges = feature.canny(images_gr)
+        
+        fig3 = plt.figure(figsize=(60,60))
+        plt.imshow(canny_edges,cmap='gray' )
+        #plt.close('all')
+        fig3.savefig('edgeimage.png')
+        dig.pixma3 = QtGui.QPixmap("edgeimage.png") # Setup pixmap with the provided image
+        dig.pixma3 = dig.pixma3.scaled(dig.label_corners_edge.width(), dig.label_corners_edge.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
+        dig.label_corners_edge.setPixmap(dig.pixma3) 
+        dig.label_corners_edge.setAlignment(QtCore.Qt.AlignCenter)
+        
         image_smooth =  signal.convolve2d(images_gr , gaussian_kernel(7,1.0) ,'same')
         fig1 = plt.figure(figsize=(120,120))
         plt.imshow( image_smooth,cmap='gray' )
@@ -691,7 +700,8 @@ def cornerDetection():
         dig.pixma = QtGui.QPixmap("smoothimage.png") # Setup pixmap with the provided image
         dig.pixma = dig.pixma.scaled(dig.label_corners_input.width(), dig.label_corners_input.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
         dig.label_corners_input.setPixmap(dig.pixma) 
-        dig.label_corners_input.setAlignment(QtCore.Qt.AlignCenter) 
+        dig.label_corners_input.setAlignment(QtCore.Qt.AlignCenter)
+        
         sobel_h = np.array([[ -1 , 0 , 1 ] ,
                     [ -2 , 0 , 2 ] ,
                     [ -1 , 0 , 1 ]])
@@ -730,14 +740,14 @@ def cornerDetection():
 
         plt.scatter(corners_pos[:,1],corners_pos[:,0],zorder=2, c = 'r',marker ='x')
         plt.show()
-        #plt.close('all')
+        plt.close('all')
         fig2.savefig('detectedcorners.png')
         dig.pixma1 = QtGui.QPixmap("detectedcorners.png") # Setup pixmap with the provided image
         dig.pixma1 = dig.pixma1.scaled(dig.label_corners_corners_output.width(), dig.label_corners_corners_output.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
         dig.label_corners_corners_output.setPixmap(dig.pixma1) 
         dig.label_corners_corners_output.setAlignment(QtCore.Qt.AlignCenter)  
 
-#################################33
+#################################
 #DETECT LINES
 
 def HoughLines():
@@ -768,7 +778,6 @@ def HoughLines():
         dig.pixma1 = dig.pixma1.scaled(dig.label_lines_input_2.width(), dig.label_lines_input_2.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
         dig.label_lines_input_2.setPixmap(dig.pixma1) 
         dig.label_lines_input_2.setAlignment(QtCore.Qt.AlignCenter) 
->>>>>>> 42cd307b318eb1d7f4a172394d3eb9556f671d4a
 
 def hough_lines_acc(img, rho_resolution=1, theta_resolution=1):
     ''' A function for creating a Hough Accumulator for lines in an image. '''
