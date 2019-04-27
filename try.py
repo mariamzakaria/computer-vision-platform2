@@ -23,7 +23,9 @@ from scipy import signal
 from scipy import ndimage
 import pyqtgraph as pg
 
-
+import snake as sn
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 
 #CONVER TO GRAYSCALE
@@ -642,7 +644,77 @@ def matching():
         dig.label_histograms_output.setAlignment(QtCore.Qt.AlignCenter)   
         x,y=Histogram(matched)
         pg.plot(x,y,title='matched histogram') 
+
+#SNAKE
+##################################################################################
+def setimagesnake():
+        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(None, "Select Image", "", "Image Files (*.png *.jpg *.jpeg *.bmp);;All Files (*)") # Ask for file
+        if fileName: # If the user gives a file
+            dig.snake= mpimg.imread( fileName)
+            dig.snake=rgb2gray(dig.snake)
+            #yourQImage=qimage2ndarray.array2qimage(dig.snake)
+            #gray=QtGui.QImage(yourQImage)
+            #pixmap  = QtGui.QPixmap.fromImage(gray)
+            #pixmap = pixmap.scaled(dig.label_snake_image.width(), dig.label_snake_image.height(), QtCore.Qt.KeepAspectRatio)
+            #dig.label_snake_image.setPixmap( pixmap) # Set the pixmap onto the label
+            #dig.label_snake_image.setAlignment(QtCore.Qt.AlignCenter)   
+
+def startsnake():
+
+            t = np.arange(0, 2*np.pi,0.1)
+            x = 437+350*np.cos(t)
+            y = 493+400*np.sin(t)
+#alpha =0.003
+#beta  = 0.02
+#gamma = 300
+#iterations = 100
+
+            alpha =float(dig.alpha.text())
+            beta  =  float(dig.beta.text())
+            gamma = float(dig.gamma.text())
+            iterations = 100
+
+# fx and fy are callable functions
+            fx, fy = sn.create_external_edge_force_gradients_from_img(dig.snake, sigma=10 )
+            snakes = sn.iterate_snake(x = x,y = y,a = alpha,b = beta,fx = fx,fy = fy,gamma = gamma,n_iters = iterations,return_all = True)
+            fig = plt.figure()
+            ax  = fig.add_subplot(111)
+            ax.imshow( dig.snake, cmap=plt.cm.gray)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_xlim(0,dig.snake.shape[1])
+            ax.set_ylim(dig.snake.shape[0],0)
+            ax.plot(np.r_[x,x[0]], np.r_[y,y[0]], c=(0,1,0), lw=2)
             
+            for i, snake in enumerate(snakes):
+                if i % 10 == 0:
+                    ax.plot(np.r_[snake[0], snake[0][0]], np.r_[snake[1], snake[1][0]], c=(0,0,1), lw=2)
+
+# Plot the last one a different color.
+
+            ax.plot(np.r_[snakes[-1][0], snakes[-1][0][0]], np.r_[snakes[-1][1], snakes[-1][1][0]], c=(1,0,0), lw=2)
+
+            plt.show()
+            
+            
+            yourQImage=qimage2ndarray.array2qimage(dig.snake)
+            gray=QtGui.QImage(yourQImage)
+            pixmap  = QtGui.QPixmap.fromImage(gray)
+            pixmap = pixmap.scaled(dig.label_snake_image.width(), dig.label_snake_image.height(), QtCore.Qt.KeepAspectRatio)
+            dig.label_snake_image.setPixmap( pixmap) # Set the pixmap onto the label
+            dig.label_snake_image.setAlignment(QtCore.Qt.AlignCenter)        
+
+
+    
+
+
+
+
+
+
+ 
+
+###################################################################################        
 
     
 
@@ -656,6 +728,8 @@ dig.pushButton_lines_load.clicked.connect(HoughLines)
 dig.pushButton_circles_load.clicked.connect(houghCircles)
 dig.pushButton_histograms_load.clicked.connect(setimagehistogram)
 dig.pushButton_histograms_load_target.clicked.connect(setimagetarget)
+dig.pushButton_snake_load.clicked.connect(setimagesnake)
+dig.pushButton_start.clicked.connect(startsnake)
 dig.radioButton_2.toggled.connect(matching)
 dig.Convert.clicked.connect(convetToGray)
 dig.radioButton.toggled.connect(HistogramEqualization)

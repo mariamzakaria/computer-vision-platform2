@@ -30,7 +30,7 @@
         <bool>true</bool>
        </property>
        <property name="currentIndex">
-        <number>3</number>
+        <number>6</number>
        </property>
        <widget class="QWidget" name="tab_filters">
         <attribute name="title">
@@ -789,6 +789,122 @@
         <attribute name="title">
          <string>Segmentation</string>
         </attribute>
+       </widget>
+       <widget class="QWidget" name="snake">
+        <attribute name="title">
+         <string>snake</string>
+        </attribute>
+        <widget class="QLabel" name="label_snake_image">
+         <property name="geometry">
+          <rect>
+           <x>146</x>
+           <y>72</y>
+           <width>341</width>
+           <height>221</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>image </string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_snake_load">
+         <property name="geometry">
+          <rect>
+           <x>214</x>
+           <y>332</y>
+           <width>91</width>
+           <height>41</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>select image </string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="gamma">
+         <property name="geometry">
+          <rect>
+           <x>600</x>
+           <y>330</y>
+           <width>113</width>
+           <height>20</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="alpha">
+         <property name="geometry">
+          <rect>
+           <x>330</x>
+           <y>330</y>
+           <width>113</width>
+           <height>20</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_start">
+         <property name="geometry">
+          <rect>
+           <x>460</x>
+           <y>390</y>
+           <width>75</width>
+           <height>23</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>start</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="beta">
+         <property name="geometry">
+          <rect>
+           <x>470</x>
+           <y>330</y>
+           <width>113</width>
+           <height>20</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_12">
+         <property name="geometry">
+          <rect>
+           <x>330</x>
+           <y>310</y>
+           <width>47</width>
+           <height>13</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>alpha</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_13">
+         <property name="geometry">
+          <rect>
+           <x>470</x>
+           <y>310</y>
+           <width>47</width>
+           <height>13</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>beta</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_14">
+         <property name="geometry">
+          <rect>
+           <x>600</x>
+           <y>310</y>
+           <width>47</width>
+           <height>13</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>gamma</string>
+         </property>
+        </widget>
        </widget>
        <widget class="QWidget" name="tab_SIFT">
         <attribute name="title">
