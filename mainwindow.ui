@@ -30,11 +30,7 @@
         <bool>true</bool>
        </property>
        <property name="currentIndex">
-<<<<<<< HEAD
-        <number>6</number>
-=======
         <number>5</number>
->>>>>>> 42cd307b318eb1d7f4a172394d3eb9556f671d4a
        </property>
        <widget class="QWidget" name="tab_filters">
         <attribute name="title">
@@ -365,6 +361,19 @@
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="Convert">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>40</y>
+           <width>93</width>
+           <height>28</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Convert To Gray</string>
          </property>
         </widget>
        </widget>
@@ -753,18 +762,40 @@
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
          </property>
         </widget>
+        <widget class="QLabel" name="label_corners_corners">
+         <property name="geometry">
+          <rect>
+           <x>510</x>
+           <y>210</y>
+           <width>261</width>
+           <height>191</height>
+          </rect>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
+         </property>
+         <property name="text">
+          <string>Corner Image</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+        </widget>
        </widget>
        <widget class="QWidget" name="tab_segmentation">
         <attribute name="title">
          <string>Segmentation</string>
         </attribute>
-        <widget class="QPushButton" name="LoadImage">
+        <widget class="QPushButton" name="LoadUmage">
          <property name="geometry">
           <rect>
-           <x>60</x>
-           <y>80</y>
-           <width>111</width>
-           <height>91</height>
+           <x>30</x>
+           <y>50</y>
+           <width>131</width>
+           <height>81</height>
           </rect>
          </property>
          <property name="text">
@@ -774,20 +805,20 @@
         <widget class="QComboBox" name="comboBox_3">
          <property name="geometry">
           <rect>
-           <x>70</x>
-           <y>280</y>
-           <width>111</width>
-           <height>31</height>
+           <x>20</x>
+           <y>250</y>
+           <width>171</width>
+           <height>41</height>
           </rect>
          </property>
          <item>
           <property name="text">
-           <string>Select Filter</string>
+           <string>Select Filters</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>region growing</string>
+           <string>Region Growing</string>
           </property>
          </item>
          <item>
@@ -801,11 +832,11 @@
           </property>
          </item>
         </widget>
-        <widget class="QLabel" name="label_12">
+        <widget class="QLabel" name="label_15">
          <property name="geometry">
           <rect>
-           <x>190</x>
-           <y>40</y>
+           <x>210</x>
+           <y>30</y>
            <width>331</width>
            <height>231</height>
           </rect>
@@ -820,11 +851,11 @@
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
          </property>
         </widget>
-        <widget class="QLabel" name="label_13">
+        <widget class="QLabel" name="label_16">
          <property name="geometry">
           <rect>
-           <x>530</x>
-           <y>40</y>
+           <x>550</x>
+           <y>30</y>
            <width>331</width>
            <height>231</height>
           </rect>
@@ -833,18 +864,12 @@
           <enum>QFrame::Box</enum>
          </property>
          <property name="text">
-          <string>Output image</string>
+          <string>output image</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
          </property>
         </widget>
-       </widget>
-<<<<<<< HEAD
-       <widget class="QWidget" name="tab_segmentation">
-        <attribute name="title">
-         <string>Segmentation</string>
-        </attribute>
        </widget>
        <widget class="QWidget" name="snake">
         <attribute name="title">
@@ -858,6 +883,9 @@
            <width>341</width>
            <height>221</height>
           </rect>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
          </property>
          <property name="text">
           <string>image </string>
@@ -962,8 +990,6 @@
          </property>
         </widget>
        </widget>
-=======
->>>>>>> 42cd307b318eb1d7f4a172394d3eb9556f671d4a
        <widget class="QWidget" name="tab_SIFT">
         <attribute name="title">
          <string>SIFT</string>

@@ -103,15 +103,18 @@ def setImageSegment():
     if dig.fileName: # If the user gives a file
         
         dig.pixmap = QtGui.QPixmap(dig.fileName) # Setup pixmap with the provided image
-        dig.pixmap = dig.pixmap.scaled(dig.label_12.width(), dig.label_12.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
-        dig.label_12.setPixmap(dig.pixmap) # Set the pixmap onto the label#dig.label_filters_input.setAlignment(QtCore.Qt.AlignCenter) # Align the label to center
+        dig.pixmap = dig.pixmap.scaled(dig.label_15.width(), dig.label_15.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
+        dig.label_15.setPixmap(dig.pixmap) # Set the pixmap onto the label#dig.label_filters_input.setAlignment(QtCore.Qt.AlignCenter) # Align the label to center
            
       
 def setFiltersSegmentation (text):
     if dig.comboBox_3.currentIndex() == 1:
-        prewit(dig.fileName)
+        Kmeans(dig.fileName)
         
     if dig.comboBox_3.currentIndex() == 2:
+        Kmeans(dig.fileName)
+    
+    if dig.comboBox_3.currentIndex() == 3:
         Kmeans(dig.fileName)    
     
 # Apply filters on images
@@ -980,8 +983,8 @@ def Kmeans (img) :
     	 							int(dataVector[y * imageW + x][2])))
     image.save("./images/KmeansResult.png")
     dig.pixm = QtGui.QPixmap("./images/KmeansResult.png") # Setup pixmap with the provided image
-    dig.pixm = dig.pixm.scaled(dig.label_13.width(), dig.label_13.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
-    dig.label_13.setPixmap(dig.pixm) # Set the pixmap onto the label#dig.label_filters_input.setAlignment(QtCore.Qt.AlignCenter) # Align the label to center
+    dig.pixm = dig.pixm.scaled(dig.label_16.width(), dig.label_16.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
+    dig.label_16.setPixmap(dig.pixm) # Set the pixmap onto the label#dig.label_filters_input.setAlignment(QtCore.Qt.AlignCenter) # Align the label to center
        
 
 app= QtWidgets.QApplication ([])
