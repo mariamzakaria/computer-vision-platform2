@@ -62,7 +62,7 @@ https://gist.github.com/rishabhsixfeet/45cb32dd5c1485e273ab81468e531f09
 
 # 2- using Kmeans
 
-### We set unmber of itrations =5 to get good result
+### We set unmber of itrations =5 to get good result , no of clusters=4 
 ### 1. Initialise data vector with attribute r,g,b,x,y for each pixel in input image
 ### 2. Initialise vector that holds which cluster a pixel is currently in 
 ### 3. Standarize the values of our features
