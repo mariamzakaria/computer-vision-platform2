@@ -101,7 +101,9 @@ https://gist.github.com/rishabhsixfeet/45cb32dd5c1485e273ab81468e531f09
 
 <img src = "/images/snake.PNG" width = "50%">
 <img src = "/images/snake1.PNG" width = "50%">
-### We can't make mouseEvent For the initial contour
+
+###  We can't make mouseEvent For the initial contour
+
 ###  so the accuracy is low, We can't make a good shrink 
 
 
