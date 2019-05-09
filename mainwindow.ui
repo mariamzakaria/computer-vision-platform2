@@ -789,7 +789,7 @@
         <attribute name="title">
          <string>Segmentation</string>
         </attribute>
-        <widget class="QPushButton" name="LoadUmage">
+        <widget class="QPushButton" name="LoadImage">
          <property name="geometry">
           <rect>
            <x>30</x>

@@ -12,6 +12,7 @@ from math import sqrt, pi, cos, sin, atan2
 from PIL import Image, ImageDraw
 from collections import defaultdict
 import  qimage2ndarray
+import cv2
 from skimage.feature import canny
 #from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from  matplotlib.backends.backend_qt5agg  import  FigureCanvas
@@ -23,13 +24,193 @@ from scipy import signal
 from scipy import ndimage
 import pyqtgraph as pg
 from skimage import feature
-
-
 import snake as sn
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
+class RegionGrowingSegmentation :
+    def __init__( self , grayScaleImage , threshold = 180 ) :
+        assert (grayScaleImage.dtype == np.dtype('uint8')) , \
+            "Input image must be gray-scale."
+        self.image = np.array(grayScaleImage , copy = True)
+        self.__regionCounter__ = 0
+        self.labelImage = np.full(grayScaleImage.shape , -1 , dtype = int)
+        self.threshold = 10
 
+    def newRegion( self , seedPoint ) :
+        regionId = self.__regionCounter__
+        self.__regionCounter__ += 1
+
+        try :
+            self.labelImage[ seedPoint[ 0 ] , seedPoint[ 1 ] ]
+        except :
+            assert True , "Error: invalid position."
+
+        if self.labelImage[ seedPoint[ 0 ] , seedPoint[ 1 ] ] == -1 :
+            self.labelImage[ seedPoint[ 0 ] , seedPoint[ 1 ] ] = regionId
+        else :
+           
+            return self.labelImage[ seedPoint[ 0 ] , seedPoint[ 1 ] ]
+
+        visitors = self.__getFourNeighbors__(seedPoint)
+        regionMean = int( self.image[ seedPoint[ 0 ] , seedPoint[ 1 ] ])
+
+        while visitors :
+            row , col  = visitors.pop()
+            if np.abs( regionMean - self.image[ row , col ] ) < self.threshold :
+                self.labelImage[ row , col ] = regionId
+                visitors.extend(self.__getFourNeighbors__((row , col)))
+                regionMean = \
+                    np.mean(self.image[ self.labelImage == regionId ])
+
+        self.image[ self.labelImage == regionId ] = regionMean
+        
+        return regionId
+
+    def __getFourNeighbors__( self , seedPoint ) :
+        delta = [ (1 , 0) , (0 , 1) , (-1 , 0) , (0 , -1) ]
+        neighbors = [ ]
+        for d in delta :
+            neighbor = np.asarray( seedPoint ) + d
+            try :
+                if self.labelImage[ neighbor[ 0 ] , neighbor[ 1 ] ] == -1 :
+                    neighbors.append(neighbor)
+            except :
+                continue
+        return neighbors
+
+    def __getEightNeighbors__( self , seedPoint ) :
+        delta = [ (1 , 0) , (1 , 1) , (0 , 1) , (-1 , 1) , (-1 , 0) ,
+                  (-1 , -1) , (0 , -1) , (1 , -1) ]
+        neighbors = [ ]
+        for d in delta :
+            neighbor = tuple(sum(p) for p in zip(d , seedPoint))
+            try :
+                if self.labelImage[ neighbor[ 0 ] , neighbor[ 1 ] ] == -1 :
+                    neighbors.append(neighbor)
+            except :
+                continue
+        return neighbors
+
+def getxy( event , x , y , flags , param ) :
+    if event == cv2.EVENT_LBUTTONDOWN :
+        seedPoint = (y , x)
+        label = dig.segmentedImage.newRegion(seedPoint)
+        dig.coloredImage[ dig.segmentedImage.labelImage == label ] = \
+            np.array( np.random.choice(255 ,3 ))
+
+        cv2.imshow('image' , dig.coloredImage)
+
+class meanShiftSeg:
+
+    def __init__(self, image, windowSize):
+        self.image = np.array( image, copy = True )
+        assert (self.image.shape[2] == 3), "The Image must be of three channels LUV "
+        self.windowSize = 2**windowSize
+        self.segmentedImage = np.array( image, copy = True )
+        ## The LUV is 256X3 , so the color space to be clustered is 256X256
+        self.colorSpace = np.zeros( (256,256) )
+        self.numofClusters = np.int(256/self.windowSize)**2       
+        self.clustersUV = np.zeros( shape=(self.numofClusters, 2) )
+        
+
+
+    def __makeColorDataSpace__(self):
+        """
+        This function populate the color-space to be clustered
+        :return:
+        """
+
+        compU = np.reshape( self.image[:,:,1], (-1,1) )
+        compV = np.reshape( self.image[:,:,2], (-1,1) )
+        compUV = np.transpose(np.array((compU[:,0],compV[:,0])))
+        for u,v in compUV :
+                self.colorSpace[ u,v ] += 1
+
+        
+    def applyMeanShift(self):
+        """
+        Apply the mean-shift to the color-space, then classify the image U-V components
+        :return: segmented image
+        """   
+        self.__makeColorDataSpace__()
+        wSize = self.windowSize
+        numOfWindPerDim = np.int(np.sqrt( self.numofClusters ))
+        clustersTemp = []
+        for itrRow in range( numOfWindPerDim ):
+            for itrCol in range( numOfWindPerDim ):
+                cntrRow, cntrCol = self.__windowIterator__( itrRow*wSize,itrCol*wSize )
+                clustersTemp.append( (cntrRow, cntrCol) )
+        self.clustersUV = np.array( clustersTemp )
+        self.__classifyColors__()
+
+        return self.segmentedImage
+
+    def __windowIterator__(self, row, col):
+        """
+        This function iterate in the given window indices, to find its center of mass
+        :param row:
+        :param col:
+        :return:
+        """
+        # print " Iterrating to find mean value"
+        wSize = self.windowSize
+        hWSize = wSize/2
+        prevRow = 0
+        prevCol = 0
+        # print row,":",row+wSize,col,":",col+wSize
+        window = self.colorSpace[ row:row+wSize,col:col+wSize ]
+        # print window.shape
+        newRow, newCol = self.__findCntrMass__( window )
+        numOfIter = 0
+        while( prevRow != newRow-hWSize and prevCol != newCol-hWSize ):
+            if( numOfIter > np.sqrt(self.numofClusters) ):
+                break
+            # print prevRow, prevCol
+            # print newRow, newCol
+            prevRow = newCol-hWSize
+            prevCol = newCol-hWSize
+            # print numOfIter
+            # print prevRow+row,":",prevRow+row+wSize," ", prevCol+col,":", prevCol+col+wSize
+            nxtRow = (prevRow+row)%(256-wSize)
+            nxtCol = (prevCol+col)%(256-wSize)
+            window = self.colorSpace[ int (nxtRow):int (nxtRow+wSize),int (nxtCol):int(nxtCol+wSize )]
+            newRow, newCol = self.__findCntrMass__( window )
+            numOfIter += 1
+        return row + newRow, col + newCol
+
+    def __classifyColors__(self):
+            """
+            This function classify the image component based on the its value, which is the index in the color-space
+            see also : https://spin.atomicobject.com/2015/05/26/mean-shift-clustering/
+            to understand what is colo-space
+            :return:
+            """
+            wSize = self.windowSize
+            numOfWindPerDim = np.int(np.sqrt(np.sqrt( self.numofClusters )))
+            for row in range( self.image.shape[0] ):
+                for col in range( self.image.shape[1] ):
+                    pixelU = self.segmentedImage[row,col,1]
+                    pixelV = self.segmentedImage[row,col,2]
+                    windowIdx = np.int(numOfWindPerDim*( np.int(numOfWindPerDim*((pixelV/wSize))  + np.int(numOfWindPerDim*( pixelU/wSize )))))
+                    self.segmentedImage[row,col,0] = self.clustersUV[windowIdx, 0]
+                    self.segmentedImage[row,col,2] = self.clustersUV [windowIdx,1]
+                 
+    def __findCntrMass__(self, window):  
+       # Calculate the window's center of mass
+        momntIdx = range( self.windowSize )
+        totalMass = np.max(np.cumsum( window ))
+        if (totalMass == 0):
+            return self.windowSize/2 , self.windowSize/2
+        if ( totalMass > 0 ):
+            #Moment around column #0 ( around the x-axis )
+            momentCol = np.max(np.cumsum(window.cumsum( axis=0 )[self.windowSize-1]*momntIdx))
+            cntrCol = np.round(1.0*momentCol/totalMass)
+            #Moment around row #0 ( around the y-axis )
+            momentRow = np.max(np.cumsum(window.cumsum( axis=1 )[:,self.windowSize-1]*momntIdx))
+            cntrRow = np.round(1.0*momentRow/totalMass)
+
+            return cntrRow, cntrCol
 #CONVER TO GRAYSCALE
 def rgb2gray(rgb_image):
     return 0.299*rgb_image[:,:,0]+0.587*rgb_image[:,:,1]+0.114*rgb_image[:,:,2]
@@ -109,13 +290,13 @@ def setImageSegment():
       
 def setFiltersSegmentation (text):
     if dig.comboBox_3.currentIndex() == 1:
-        Kmeans(dig.fileName)
+        regionGrowing (dig.fileName)
         
     if dig.comboBox_3.currentIndex() == 2:
         Kmeans(dig.fileName)
     
     if dig.comboBox_3.currentIndex() == 3:
-        Kmeans(dig.fileName)    
+        meanShift(dig.fileName)    
     
 # Apply filters on images
 def setFilters(text):
@@ -899,7 +1080,7 @@ def hough_lines_draw(img, indicies, rhos, thetas):
        # cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)        
            
 def Kmeans (img) :
-    iterations = 5    
+    iterations = 3   
     K=4
     inputName= img
     dig.outputName = 'KmeansImage.jpg'
@@ -986,7 +1167,25 @@ def Kmeans (img) :
     dig.pixm = dig.pixm.scaled(dig.label_16.width(), dig.label_16.height(), QtCore.Qt.KeepAspectRatio) # Scale pixmap
     dig.label_16.setPixmap(dig.pixm) # Set the pixmap onto the label#dig.label_filters_input.setAlignment(QtCore.Qt.AlignCenter) # Align the label to center
        
+def regionGrowing (img):
+    image = cv2.imread(img , 0)
+    dig.coloredImage = cv2.imread( img)
+    dig.segmentedImage = RegionGrowingSegmentation(image) 
+    cv2.namedWindow('image' , cv2.WINDOW_NORMAL)
+    cv2.setMouseCallback('image' , getxy)
+    cv2.imshow('image' , dig.coloredImage )
+    
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
+def meanShift (img):  
+    imageRGB = Image.open( img )
+    meanShift = meanShiftSeg ( imageRGB, 7 )
+    segImage = meanShift.applyMeanShift()
+    cv2.imshow( 'image', segImage )
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
 app= QtWidgets.QApplication ([])
 dig = uic.loadUi("mainwindow.ui")
 
