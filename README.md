@@ -1,20 +1,20 @@
-
+﻿
 # 1.Corner detection
 
-# Harris operator
+## Harris operator
 
 
-# Steps:
+## Steps:
 
-#            1.Color image to Grayscale conversion 
-#            2.image smoothing by convoluion and gaussian kernel
-#            3.compute Gradient_x and Gradient_y by Sobel kernel
-#            4.compute the Hessian matrix
-#            5.compute Eigen values of Hessian matrix 
-#            6.evaluate corners and edges using R as a measure
-#                 R=(λ1×λ2)−k(λ1+λ2)
-#             . Edge : R < 0
-#             .Corner : R > 0
+##           1.Color image to Grayscale conversion 
+##            2.image smoothing by convoluion and gaussian kernel
+##            3.compute Gradient_x and Gradient_y by Sobel kernel
+##            4.compute the Hessian matrix
+##            5.compute Eigen values of Hessian matrix 
+##            6.evaluate corners and edges using R as a measure
+##                 R=(λ1×λ2)−k(λ1+λ2)
+##             . Edge : R < 0
+##             .Corner : R > 0
 
 
 <img src = "/images/corner2.PNG" width = "50%">
@@ -27,13 +27,13 @@
 
 # Detect Lines (HoughLines)
 https://gist.github.com/rishabhsixfeet/45cb32dd5c1485e273ab81468e531f09
-# Steps:
+## Steps:
 
-#            1.Color image to Grayscale conversion 
-#            2.Get a binary edge image by canny edge detector
-#            3.build function for hough accumulator
-#            4.drawing the lines from the hough accumulatorlines
-#            5.run hough accumulatorlines on the canny edge image
+##            1.Color image to Grayscale conversion 
+##            2.Get a binary edge image by canny edge detector
+##            3.build function for hough accumulator
+##            4.drawing the lines from the hough accumulatorlines
+##            5.run hough accumulatorlines on the canny edge image
 
 <img src = "/images/detectedlines.PNG" width = "50%">
 
