@@ -90,3 +90,21 @@ https://gist.github.com/rishabhsixfeet/45cb32dd5c1485e273ab81468e531f09
 <img src = "/images/meanShift.PNG" width = "50%">
 
 ### we can't show the output image in the gui so we use opencv to show it 
+
+# Snake
+
+### 1. initialize contour points
+### 2. Shrink points to reach minimum energy in image 
+### 3. set alpha high if there is a deceptive image gradient 
+### 4. set Beta high if smooth edged feature , low if sharp edges 
+### 5. set gama high if contrast between background and object is low 
+
+<img src = "/images/snake.PNG" width = "50%">
+<img src = "/images/snake1.PNG" width = "50%">
+### We can't make mouseEvent For the initial contour
+###  so the accuracy is low, We can't make a good shrink 
+
+
+
+ 
+
